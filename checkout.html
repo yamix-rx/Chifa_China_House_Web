@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cobro - China House</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <div style="display: flex; align-items: center; justify-content: center;">
+            <img src="imagenes/logo.jpg" alt="Logo China House" style="height: 50px; margin-right: 15px;">
+            <h1>SISTEMA DE GESTION DE CHINA HOUSE</h1>
+        </div>
+    </header>
+    <main class="main-container">
+        <div class="box checkout-grid">
+            <section class="checkout-details">
+                <h2>Detalles de Pago y Entrega</h2>
+                <form id="checkout-form" method="post"> 
+                    
+                    <h3>1. Tipo de Entrega</h3>
+                    <div class="form-group">
+                        <select id="delivery-select">
+                            <option value="recojo">Recojo en Tienda</option>
+                            <option value="delivery">Delivery (Agregar s/5.00)</option>
+                        </select>
+                    </div>
+                    
+                    <h3>2. Método de Pago</h3>
+                    <div class="form-group">
+                        <select id="payment-method">
+                            <option value="Efectivo">Efectivo</option>
+                            <option value="Tarjeta">Tarjeta de Crédito/Débito</option> 
+                        </select>
+                    </div>
+
+                    <div id="card-details-group" style="display: none; border: 1px solid #ddd; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                        <h3>Detalles de la Tarjeta</h3>
+                        <div class="form-group">
+                            <input type="text" id="card-number" placeholder="Número de Tarjeta (16 dígitos)" maxlength="16" pattern="\d{16}">
+                        </div>
+                        <div style="display: flex; gap: 10px;">
+                            <div class="form-group" style="flex: 2;">
+                                <input type="text" id="expiry-date" placeholder="MM/AA" maxlength="5" pattern="(0[1-9]|1[0-2])\/\d{2}">
+                            </div>
+                            <div class="form-group" style="flex: 1;">
+                                <input type="text" id="cvv" placeholder="CVV" maxlength="3" pattern="\d{3}">
+                            </div>
+                        </div>
+                    </div>
+                    <h3>3. Informacion de Contacto</h3>
+                    <div class="form-group">
+                        <input type="text" id="customer-name" placeholder="Nombre para el Pedido" required> 
+                    </div>
+                    
+                    <div class="form-group">
+                        <input type="text" 
+                               id="phone-number"
+                               placeholder="9 dígitos del teléfono" 
+                               value="+51 " 
+                               required
+                               maxlength="13">
+                        <small id="phone-error" style="color: var(--color-primary); margin-top: 5px; display: none;">Debe ingresar 9 dígitos después del +51.</small>
+                    </div>
+                    
+                    <div class="form-group" id="address-group" style="display: none;">
+                        <input type="text" 
+                               id="delivery-address" 
+                               placeholder="Dirección de Delivery (Obligatoria)"
+                               >
+                        <small id="address-error" style="color: var(--color-primary); margin-top: 5px; display: none;">Debe agregar la dirección para el delivery.</small>
+                    </div>
+
+                    <button type="submit" id="checkout-button" class="button button-success" style="width: 100%; margin-top: 20px;">
+                        CONFIRMAR PAGO
+                    </button>
+                    
+                    <a href="menu.html" class="button button-primary" style="width: 100%; margin-top: 10px; background-color: #6c757d;">
+                        Volver al Menú
+                    </a>
+                </form>
+            </section>
+
+            <section class="checkout-summary cart-section">
+                <h2>Resumen del Pedido</h2>
+                <ul class="cart-list">
+                    </ul>
+                <div class="cart-total">
+                    <span>TOTAL A PAGAR</span>
+                    <span>s/0.00</span>
+                </div>
+            </section>
+        </div>
+    </main>
+    <footer>
+        <p>&copy; 2025 China House. Todos los derechos reservados. <a href="reclamos.html">Libro de Reclamaciones</a></p>
+    </footer>
+
+    <script>
+    const checkoutCartList = document.querySelector('.checkout-summary .cart-list');
+    const checkoutTotalSpan = document.querySelector('.checkout-summary .cart-total span:last-child');
+    const deliverySelect = document.getElementById('delivery-select');
+    const checkoutForm = document.getElementById('checkout-form');
+    const phoneNumberInput = document.getElementById('phone-number');
+    const phoneError = document.getElementById('phone-error');
+    const deliveryAddressInput = document.getElementById('delivery-address');
+    const addressError = document.getElementById('address-error');
+    const addressGroup = document.getElementById('address-group');
+    const customerNameInput = document.getElementById('customer-name');
+    const paymentMethodSelect = document.getElementById('payment-method');
+    
+    // ELEMENTOS DE TARJETA
+    const cardDetailsGroup = document.getElementById('card-details-group');
+    const cardNumberInput = document.getElementById('card-number');
+    const expiryDateInput = document.getElementById('expiry-date'); 
+    const cvvInput = document.getElementById('cvv');
+
+    const DELIVERY_FEE = 5.00;
+    let currentDeliveryFee = 0;
+
+    //FUNCIONALIDAD DE AUTOCOMPLETADO DE FECHA 
+    expiryDateInput.addEventListener('input', (e) => {
+        let input = e.target.value.replace(/\D/g, ''); 
+        
+        if (input.length > 2) {
+            input = input.substring(0, 2) + '/' + input.substring(2, 4);
+        }
+        
+        if (input.length > 5) {
+            input = input.substring(0, 5);
+        }
+        
+        e.target.value = input;
+    });
+
+    function validatePhoneNumber() {
+        const fullNumber = phoneNumberInput.value.trim();
+        const prefix = '+51 ';
+        
+        if (!fullNumber.startsWith(prefix)) {
+            phoneError.textContent = "El número debe comenzar con +51.";
+            phoneError.style.display = 'block';
+            return false;
+        }
+
+        const digits = fullNumber.substring(prefix.length).replace(/\s/g, ''); 
+
+        if (digits.length !== 9 || isNaN(digits)) {
+            phoneError.textContent = "Debe ingresar exactamente 9 dígitos después del +51.";
+            phoneError.style.display = 'block';
+            return false;
+        }
+
+        phoneError.style.display = 'none';
+        return true;
+    }
+
+    function validateAddress() {
+        if (deliverySelect.value === 'delivery') {
+            if (deliveryAddressInput.value.trim() === '') {
+                addressError.style.display = 'block';
+                return false;
+            }
+        }
+        addressError.style.display = 'none';
+        return true;
+    }
+    
+    function validateCardDetails() {
+        if (paymentMethodSelect.value === 'Tarjeta') {
+            if (cardNumberInput.value.length !== 16 || 
+                expiryDateInput.value.length !== 5 || 
+                cvvInput.value.length !== 3) {
+                
+                alert('Por favor, complete correctamente todos los detalles de la tarjeta (16 dígitos, MM/AA, 3 dígitos CVV).');
+                return false;
+            }
+        }
+        return true;
+    }
+    phoneNumberInput.addEventListener('input', () => {
+        const prefix = '+51 ';
+        if (!phoneNumberInput.value.startsWith(prefix)) {
+            phoneNumberInput.value = prefix;
+        }
+    });
+
+    // Logica para mostrar/ocultar campos de tarjeta
+    paymentMethodSelect.addEventListener('change', (e) => {
+        if (e.target.value === 'Tarjeta') {
+            cardDetailsGroup.style.display = 'block';
+            cardNumberInput.required = true;
+            expiryDateInput.required = true;
+            cvvInput.required = true;
+        } else {
+            cardDetailsGroup.style.display = 'none';
+            cardNumberInput.required = false;
+            expiryDateInput.required = false;
+            cvvInput.required = false;
+        }
+    });
+    
+    function saveSaleToDashboard() {
+        const baseTotalWithIgv = parseFloat(sessionStorage.getItem('chinaHouseTotal'));
+        const carritoData = JSON.parse(sessionStorage.getItem('chinaHouseCart'));
+        const currentSubtotal = parseFloat(sessionStorage.getItem('chinaHouseSubtotal')) || 0;
+        const currentIgv = parseFloat(sessionStorage.getItem('chinaHouseIgv')) || 0;
+
+        if (!carritoData || carritoData.length === 0 || isNaN(baseTotalWithIgv)) {
+            return false;
+        }
+        
+        const finalTotal = baseTotalWithIgv + currentDeliveryFee;
+        const deliveryType = deliverySelect.value === 'delivery' ? 'Delivery' : 'Recojo';
+        const deliveryAddress = deliveryType === 'Delivery' ? deliveryAddressInput.value.trim() : 'Recojo en Tienda';
+
+        const newSale = {
+            id: Date.now(),
+            date: new Date().toLocaleDateString('es-PE'),
+            time: new Date().toLocaleTimeString('es-PE'),
+            
+            // Restaurado: ID del usuario logueado
+            usuarioId: localStorage.getItem('usuarioActivo') || 'N/A', 
+            
+            // Restaurado: Nombre del cliente (del formulario)
+            customerName: customerNameInput.value.trim(), 
+            phoneNumber: phoneNumberInput.value.trim(),
+            
+            // Detalles de la Orden
+            deliveryType: deliveryType,
+            deliveryAddress: deliveryAddress,
+            paymentMethod: paymentMethodSelect.value,
+            deliveryFee: currentDeliveryFee,
+            
+            // Totales
+            subtotal: currentSubtotal,
+            igv: currentIgv,
+            totalFinal: finalTotal,
+            
+            items: carritoData,
+        };
+
+        let sales = JSON.parse(localStorage.getItem('chinaHouseSales')) || [];
+        sales.push(newSale);
+        localStorage.setItem('chinaHouseSales', JSON.stringify(sales));
+        
+        return true;
+    }
+
+    // Manejar el envIo del formulario
+    checkoutForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        // Validaciones
+        const isPhoneValid = validatePhoneNumber();
+        const isAddressValid = validateAddress();
+        const isNameValid = customerNameInput.value.trim() !== '';
+        const isCardValid = validateCardDetails();
+
+        if (!isPhoneValid || !isAddressValid || !isNameValid || !isCardValid) {
+            alert("Por favor, corrige los campos obligatorios antes de confirmar el pago.");
+            return;
+        }
+        
+        // Guardar la venta
+        const saleSaved = saveSaleToDashboard();
+
+        if (saleSaved) {
+            // Limpiar la sesión (carrito, totales)
+            sessionStorage.removeItem('chinaHouseCart');
+            sessionStorage.removeItem('chinaHouseSubtotal');
+            sessionStorage.removeItem('chinaHouseTotal');
+            sessionStorage.removeItem('chinaHouseIgv');
+            sessionStorage.removeItem('chinaHouseFinalTotal');
+            
+            // Redirigir
+            alert(`¡Venta registrada! Tu pedido será procesado. Redirigiendo a la página de agradecimiento.`);
+            window.location.href = 'thank_you.html';
+        } else {
+            alert('Error al procesar la venta. Intente de nuevo.');
+        }
+    });
+
+    function loadCheckoutSummary() {
+        // 1. VALIDACION DE SESION (PROTECCION)
+        if (sessionStorage.getItem('isLoggedIn') !== 'true') {
+            alert('🚫 Debes iniciar sesión para completar la compra.');
+            window.location.href = 'login.html'; 
+            return;
+        }
+        
+        // 2. VALIDACIÓN DEL CARRITO (Flujo de compra)
+        const savedBaseTotal = parseFloat(sessionStorage.getItem('chinaHouseSubtotal'));
+        const savedCartJson = sessionStorage.getItem('chinaHouseCart');
+        const savedIgv = parseFloat(sessionStorage.getItem('chinaHouseIgv'));
+
+        if (!savedCartJson || isNaN(savedBaseTotal) || savedBaseTotal <= 0) {
+            alert("🛒 El carrito está vacío o la compra no es válida. Volviendo al menú.");
+            window.location.href = 'menu.html';
+            return;
+        }
+
+        // PRE-LLENAR DATOS DEL CLIENTE LOGUEADO
+        const savedUserName = sessionStorage.getItem('userName');
+        if (savedUserName) {
+            customerNameInput.value = savedUserName; 
+        }
+        
+        // MOSTRAR PRODUCTOS DEL CARRITO (Lógica Restaurada)
+        checkoutCartList.innerHTML = ''; 
+        const savedCart = JSON.parse(savedCartJson);
+
+        // Mostrar cada producto en el resumen
+        savedCart.forEach(item => {
+            let itemLi = document.createElement('li');
+            const totalItemPrice = item.price * item.quantity;
+            itemLi.innerHTML = `
+                <span>${item.quantity} x ${item.name}</span>
+                <span>s/${totalItemPrice.toFixed(2)}</span>
+            `;
+            checkoutCartList.appendChild(itemLi);
+        });
+        
+        // Separador
+        checkoutCartList.appendChild(document.createElement('hr')); 
+
+        // Mostrar Subtotal e IGV
+        let subtotalLi = document.createElement('li');
+        subtotalLi.innerHTML = `<span>Subtotal de Platos</span><span>s/${savedBaseTotal.toFixed(2)}</span>`;
+        checkoutCartList.appendChild(subtotalLi);
+
+        let igvLi = document.createElement('li');
+        igvLi.innerHTML = `<span>IGV (18%)</span><span>s/${savedIgv.toFixed(2)}</span>`;
+        checkoutCartList.appendChild(igvLi);
+
+        const deliveryLi = document.createElement('li');
+        deliveryLi.className = 'delivery-cost';
+        deliveryLi.style.cssText = 'border: none; color: var(--color-light-dark);';
+        deliveryLi.innerHTML = `<span>Costo de Delivery</span><span>s/0.00</span>`;
+        checkoutCartList.appendChild(deliveryLi);
+
+        // Iniciar con 0 de costo de delivery
+        updateTotal(0); 
+    }
+    
+    function updateTotal(deliveryFee) {
+        currentDeliveryFee = deliveryFee;
+        const baseTotalWithIgv = parseFloat(sessionStorage.getItem('chinaHouseTotal')) || 0;
+        let finalTotal = baseTotalWithIgv + deliveryFee;
+        
+        const deliveryLiSpan = document.querySelector('.delivery-cost span:last-child');
+        if (deliveryLiSpan) deliveryLiSpan.textContent = `s/${deliveryFee.toFixed(2)}`;
+
+        checkoutTotalSpan.textContent = `s/${finalTotal.toFixed(2)}`;
+        
+        sessionStorage.setItem('chinaHouseFinalTotal', finalTotal.toFixed(2));
+    }
+
+    // Logica para mostrar/ocultar el campo de direccion y recalcular total
+    deliverySelect.addEventListener('change', (e) => {
+        let deliveryFee = 0;
+        if (e.target.value === 'delivery') {
+            deliveryFee = DELIVERY_FEE; 
+            addressGroup.style.display = 'block';
+            deliveryAddressInput.required = true;
+        } else {
+            deliveryFee = 0; 
+            addressGroup.style.display = 'none';
+            deliveryAddressInput.required = false;
+            addressError.style.display = 'none';
+        }
+        updateTotal(deliveryFee);
+    });
+
+    document.addEventListener('DOMContentLoaded', loadCheckoutSummary);
+</script>
+</body>
+</html>

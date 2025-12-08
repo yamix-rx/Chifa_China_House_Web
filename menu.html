@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Menú - China House</title>
+    <link rel="stylesheet" href="styles.css">
+    
+    <style>
+        /* Estilos CSS internos para el menú */
+        body {
+            /* Sobrescribe la imagen de fondo global para usar solo el color */
+            background-image: none !important; 
+        }
+        .hidden {
+            display: none !important;
+        }
+        /* Estilos del carrito para el botón de remover */
+        .cart-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .cart-list li:last-child {
+            border-bottom: none;
+        }
+        .remove-button {
+            line-height: 1;
+            padding: 0 5px;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div style="display: flex; align-items: center; float: left; margin-left: 20px;">
+            <img src="imagenes/logo.jpg" alt="Logo China House" style="height: 50px; margin-right: 15px;">
+            <h1 style="display: inline-block; margin: 0;">CHINA HOUSE</h1>
+        </div>
+        
+        <div id="admin-links" style="float: right; margin-right: 10px; color: white; display: flex; align-items: center; height: 100%;">
+            
+            <a href="admin_dashboard.html" id="dashboard-link" class="button button-info hidden" style="background-color: #007bff; margin-right: 15px; padding: 8px 15px;">
+                </a> 
+            
+            <div id="user-info" style="display: flex; align-items: center;">
+                <span id="welcome-message" style="margin-right: 15px; font-size: 1.1em;"></span>
+                <button id="logout-button" class="button button-info" style="background-color: #b30000; padding: 8px 15px;">
+                    Cerrar Sesión
+                </button>
+            </div>
+        </div>
+    </header>
+    <main class="main-container">
+        <div class="panel menu-panel">
+            <h2>🍜 Nuestro Menú Chifa 🥢</h2>
+            
+            <div class="menu-grid">
+                <div class="menu-section">
+                    <h3>Platos Principales</h3>
+                    <div class="menu-items-section">
+                        <div class="menu-item">
+                            <img src="imagenes/chaufa.jpg" alt="Imagen de Arroz Chaufa" class="dish-image">
+                            <h4>Arroz Chaufa Especial</h4>
+                            <p>Arroz salteado con pollo, cerdo, camarones y huevo.</p>
+                            <p class="price-tag">Precio: s/18.50</p>
+                            <button class="button button-info" data-plate-id="1">Añadir</button>
+                        </div>
+                        
+                        <div class="menu-item">
+                            <img src="imagenes/tallarin.jpg" alt="Imagen de Tallarín Saltado" class="dish-image">
+                            <h4>Tallarín Saltado</h4>
+                            <p>Fideos chinos con carne de res y verduras en salsa de ostión.</p>
+                            <p class="price-tag">Precio: s/16.00</p>
+                            <button class="button button-info" data-plate-id="2">Añadir</button>
+                        </div>
+                        
+                        <div class="menu-item">
+                            <img src="imagenes/aeropuerto.jpeg" alt="Imagen de Aeropuerto" class="dish-image">
+                            <h4>Aeropuerto</h4>
+                            <p>Combinación de chaufa y tallarin con carnes mixtas.</p>
+                            <p class="price-tag">Precio: s/20.00</p>
+                            <button class="button button-info" data-plate-id="3">Añadir</button>
+                        </div>
+                    </div>
+                    
+                    <h3 style="margin-top: 30px;">Sopas y Entradas</h3>
+                    <div class="menu-items-section">
+                        <div class="menu-item">
+                            <img src="imagenes/wantanfrito.webp" alt="Imagen de Wantan Frito" class="dish-image">
+                            <h4>Wantan Frito</h4>
+                            <p>Empanaditas rellenas de carne, fritas y crujientes.</p>
+                            <p class="price-tag">Precio: s/8.00</p>
+                            <button class="button button-info" data-plate-id="4">Añadir</button>
+                        </div>
+                        
+                        <div class="menu-item">
+                            <img src="imagenes/sopawantan.jpg" alt="Imagen de Sopa Wantan" class="dish-image">
+                            <h4>Sopa Wantan</h4>
+                            <p>Caldo concentrado con wantanes y verduras.</p>
+                            <p class="price-tag">Precio: s/12.00</p>
+                            <button class="button button-info" data-plate-id="5">Añadir</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="cart-section">
+                    <h3>🛒 Pedido Actual</h3>
+                    <ul class="cart-list">
+                        </ul>
+                    <div class="cart-total">
+                        <span>TOTAL (Incl. IGV)</span>
+                        <span>s/0.00</span>
+                    </div>
+                    
+                    <a href="checkout.html" id="checkout-link" class="button button-primary" style="width: 85%; margin-top: 20px; pointer-events: none;">
+                        Proceder al Cobro
+                    </a>
+                </div>
+            </div>
+        </div>
+    </main>
+    <footer>
+       <p>&copy; 2025 China House. Todos los derechos reservados. <a href="reclamos.html">Libro de Reclamaciones</a></p>
+    </footer>
+
+    <script>
+        // 1. CONFIGURACION Y VARIABLES GLOBALES
+        const welcomeMessage = document.getElementById('welcome-message');
+        const logoutButton = document.getElementById('logout-button');
+        const userInfoDiv = document.getElementById('user-info');
+        const dashboardLink = document.getElementById('dashboard-link');
+        const cartSection = document.querySelector('.cart-section');
+        const allAddButtons = document.querySelectorAll('.menu-item button');
+        const cartList = document.querySelector('.cart-list');
+        const cartTotalSpan = document.querySelector('.cart-total span:last-child');
+        const checkoutLink = document.getElementById('checkout-link');
+
+        const userName = sessionStorage.getItem('userName');
+        const isLoggedIn = sessionStorage.getItem('isLoggedIn') === 'true';
+        const isAdmin = sessionStorage.getItem('isAdminLoggedIn') === 'true';
+        
+        let carrito = [];  
+        const IGV_RATE = 0.18; 
+
+        // DEFINICION CENTRALIZADA DE PLATOS
+        const menuData = [
+            { id: 1, name: "Arroz Chaufa Especial", price: 18.50 },
+            { id: 2, name: "Tallarín Saltado", price: 16.00 },
+            { id: 3, name: "Aeropuerto", price: 20.00 },
+            { id: 4, name: "Wantan Frito", price: 8.00 },
+            { id: 5, name: "Sopa Wantan", price: 12.00 }
+        ];
+
+        //LOGICA DE CERRAR SESION
+        function logout() {
+            sessionStorage.clear(); 
+            localStorage.removeItem('usuarioActivo'); 
+            window.location.href = 'login.html';
+        }
+
+        //LOGICA DE CARRITO
+        window.addToCart = function(plateId) {
+            const plate = menuData.find(p => p.id === plateId);
+            if (!plate) return;
+
+            const existingItem = carrito.find(item => item.id === plateId);
+
+            if (existingItem) {
+                existingItem.quantity++;
+            } else {
+                carrito.push({
+                    id: plateId,
+                    name: plate.name,
+                    price: plate.price,
+                    quantity: 1
+                });
+            }
+            updateCartDisplay();
+        }
+
+        // Remueve un plato del carrito
+        window.removeFromCart = function(plateId) {
+            const existingItemIndex = carrito.findIndex(item => item.id === plateId);
+            
+            if (existingItemIndex > -1) {
+                if (carrito[existingItemIndex].quantity > 1) {
+                    carrito[existingItemIndex].quantity--; // Decrementa la cantidad
+                } else {
+                    carrito.splice(existingItemIndex, 1); // Elimina el ítem si la cantidad es 1
+                }
+            }
+            updateCartDisplay();
+        }
+
+        // Actualiza la visualizacion y guarda los datos
+        function updateCartDisplay() {
+            cartList.innerHTML = ''; 
+            let subtotal = 0;
+            
+            if (carrito.length === 0) {
+                 cartList.innerHTML = '<li style="justify-content: center; color: gray;">El carrito está vacío.</li>';
+            }
+
+            carrito.forEach(item => {
+                const itemTotal = item.price * item.quantity;
+                subtotal += itemTotal;
+
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <span style="flex-grow: 1;">
+                        ${item.quantity} x ${item.name}
+                    </span>
+                    <span style="display: flex; align-items: center;">
+                        s/${itemTotal.toFixed(2)}
+                        <button 
+                            class="remove-button" 
+                            onclick="removeFromCart(${item.id})" 
+                            title="Quitar uno"
+                            style="margin-left: 10px; cursor: pointer; background: none; border: none; color: var(--color-primary); font-weight: bold;"
+                        >
+                            &times;
+                        </button>
+                    </span>
+                `;
+                cartList.appendChild(li);
+            });
+
+            // CÁLCULO DEL IGV y TOTAL
+            const igvAmount = subtotal * IGV_RATE;
+            const total = subtotal + igvAmount;
+            
+            // Linea separadora para IGV/Total
+            if (subtotal > 0) {
+                const igvLi = document.createElement('li');
+                igvLi.style.cssText = 'border-top: 1px dashed #cccccc; font-weight: normal; margin-top: 5px; padding-top: 5px;';
+                igvLi.innerHTML = `<span>IGV (${(IGV_RATE * 100).toFixed(0)}%)</span><span>s/${igvAmount.toFixed(2)}</span>`;
+                cartList.appendChild(igvLi);
+            }
+
+            // Actualizar el total general
+            cartTotalSpan.textContent = `s/${total.toFixed(2)}`;
+
+            // Habilitar/Deshabilitar el enlace de cobro
+            if (subtotal > 0) {
+                checkoutLink.classList.remove('button-primary');
+                checkoutLink.classList.add('button-success');
+                checkoutLink.style.pointerEvents = 'auto'; // Habilitar clic
+            } else {
+                checkoutLink.classList.remove('button-success');
+                checkoutLink.classList.add('button-primary');
+                checkoutLink.style.pointerEvents = 'none'; // Deshabilitar clic
+            }
+            
+            // GUARDAR DATOS CLAVE 
+            sessionStorage.setItem('chinaHouseCart', JSON.stringify(carrito));
+            sessionStorage.setItem('chinaHouseSubtotal', subtotal.toFixed(2));
+            sessionStorage.setItem('chinaHouseTotal', total.toFixed(2)); // Total con IGV (sin delivery)
+            sessionStorage.setItem('chinaHouseIgv', igvAmount.toFixed(2));
+        }
+
+        //INICIALIZACIÓN 
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // Asignar eventos a los botones de añadir
+            allAddButtons.forEach(button => {
+                const plateId = parseInt(button.getAttribute('data-plate-id'));
+                button.addEventListener('click', () => addToCart(plateId));
+            });
+
+            if (!isLoggedIn) {
+                //LOGICA DE NO LOGUEADO
+                userInfoDiv.style.display = 'none';
+                dashboardLink.classList.add('hidden');
+
+                allAddButtons.forEach(button => {
+                    button.disabled = true;
+                    button.textContent = "INICIA SESIÓN";
+                    button.classList.remove('button-info');
+                    button.classList.add('button-primary');
+                });
+                
+                cartSection.innerHTML = `
+                    <div style="text-align: center; padding: 20px;">
+                        <h3>Inicia Sesión para empezar a ordenar 🔒</h3>
+                        <p>Por favor, <a href="login.html" style="color: var(--color-primary); font-weight: bold;">haz clic aquí para iniciar sesión</a> y activar el carrito.</p>
+                    </div>
+                `;
+                checkoutLink.href = 'login.html';
+            } else {
+                //LOGICA DE USUARIO LOGUEADO 
+                welcomeMessage.textContent = `Bienvenido, ${userName || 'Cliente'}`;
+                logoutButton.addEventListener('click', logout);
+                
+                // LOGICA DE ADMINISTRADOR 
+                if (isAdmin) {
+                    dashboardLink.classList.remove('hidden');
+                    dashboardLink.href = 'admin_dashboard.html';
+                    dashboardLink.textContent = 'Panel Admin';
+                } else {
+                    dashboardLink.classList.add('hidden');
+                }
+
+                // CARGAR EL CARRITO AL INICIO
+                const savedCart = sessionStorage.getItem('chinaHouseCart');
+                if (savedCart) {
+                    carrito = JSON.parse(savedCart);
+                }
+                updateCartDisplay();
+            }
+        });
+    </script>
+</body>
+</html>

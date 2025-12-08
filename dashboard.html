@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Ventas - China House</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        :root {
+            --color-primary: #e62e2e; 
+            --color-dark: #343a40;
+            --color-success: #28a745;
+            --color-info: #17a2b8;
+            --color-warning: #ffc107;
+        }
+        .dashboard-container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        .summary-boxes {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .summary-box {
+            flex: 1;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            color: white;
+        }
+        /* Estilos ajustados a las variables */
+        .box-sales { background-color: var(--color-success); } 
+        .box-count { background-color: var(--color-info); }
+        .summary-box h3 { margin: 0 0 10px 0; font-size: 1.1em; }
+        .summary-box p { font-size: 2.5em; font-weight: bold; margin: 0; }
+        
+        .sales-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .sales-table th, .sales-table td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+        .sales-table th {
+            background-color: var(--color-primary);
+            color: white;
+        }
+        .sales-table tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div style="display: flex; align-items: center; float: left; margin-left: 20px;">
+            <img src="imagenes/logo.jpg" alt="Logo China House" style="height: 50px; margin-right: 15px;">
+            <h1 style="display: inline-block; margin: 0;">DASHBOARD DE VENTAS</h1>
+        </div>
+        <div style="float: right; margin-right: 10px; color: white; display: flex; align-items: center; height: 100%;">
+            <a href="admin_dashboard.html" class="button" style="background-color: #f0ad4e; padding: 8px 15px; text-decoration: none;">
+                Panel Admin
+            </a>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <div class="dashboard-container">
+            <h2>📊 Resumen Global de Ventas</h2>
+
+            <div class="summary-boxes">
+                <div class="summary-box box-sales">
+                    <h3>Ventas Totales (S/)</h3>
+                    <p id="total-revenue">s/0.00</p>
+                </div>
+                <div class="summary-box box-count">
+                    <h3>Total de Pedidos</h3>
+                    <p id="total-orders">0</p>
+                </div>
+            </div>
+
+            <h3>Detalle de Pedidos</h3>
+            <div id="sales-detail">
+                <p>Cargando datos...</p>
+            </div>
+            
+            <a href="menu.html" class="button button-primary" style="margin-top: 30px; text-decoration: none; display: inline-block; padding: 10px 20px;">Volver al Menú</a>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 China House. Todos los derechos reservados. <a href="reclamos.html">Libro de Reclamaciones</a></p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', loadSalesDashboard);
+
+        function loadSalesDashboard() {
+            // Obtenemos los datos de ventas del LocalStorage
+            const salesData = JSON.parse(localStorage.getItem('chinaHouseSales')) || [];
+            const detailContainer = document.getElementById('sales-detail');
+            const totalRevenueEl = document.getElementById('total-revenue');
+            const totalOrdersEl = document.getElementById('total-orders');
+            
+            let totalRevenue = 0;
+
+            if (salesData.length === 0) {
+                detailContainer.innerHTML = '<p style="text-align: center;">Aún no hay ventas registradas.</p>';
+                totalRevenueEl.textContent = 's/0.00';
+                totalOrdersEl.textContent = '0';
+                return;
+            }
+
+            salesData.forEach(sale => {
+                const saleTotal = sale.totalFinal || sale.total; 
+                totalRevenue += saleTotal;
+            });
+            
+            totalRevenueEl.textContent = `s/${totalRevenue.toFixed(2)}`;
+            totalOrdersEl.textContent = salesData.length;
+
+            let tableHTML = `
+                <table class="sales-table">
+                    <thead>
+                        <tr>
+                            <th>ID Venta</th>
+                            <th>Fecha/Hora</th>
+                            <th>Cliente</th>
+                            <th>Items</th>
+                            <th>Tipo Entrega</th>
+                            <th>Total (S/)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            salesData.slice().reverse().forEach(sale => {
+                const itemNames = sale.items.map(item => `${item.quantity}x ${item.name}`).join(', ');
+                const finalTotal = sale.totalFinal || sale.total;
+                
+                tableHTML += `
+                    <tr>
+                        <td>#${sale.id.toString().slice(-4)}</td>
+                        <td>${sale.date} ${sale.time}</td>
+                        <td>${sale.customerName || 'N/D'}</td> 
+                        <td>${itemNames}</td>
+                        <td>${sale.deliveryType || 'Recojo'}</td>
+                        <td>s/${finalTotal.toFixed(2)}</td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += '</tbody></table>';
+            detailContainer.innerHTML = tableHTML;
+        }
+    </script>
+</body>
+</html>

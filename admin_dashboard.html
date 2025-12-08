@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - China House</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        :root {
+            --color-primary: #e62e2e; 
+            --color-dark: #343a40;
+            --color-success: #28a745;
+            --color-info: #17a2b8;
+            --color-warning: #ffc107;
+        }
+        .admin-grid {
+            display: grid;
+            grid-template-columns: 200px 1fr;
+            gap: 20px;
+            padding: 20px;
+        }
+        .sidebar {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .sidebar button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            background-color: var(--color-dark);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .sidebar button:hover {
+            background-color: var(--color-primary);
+        }
+        .sidebar button.active {
+            background-color: var(--color-primary);
+            font-weight: bold;
+        }
+        .content-section {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .content-section h2 {
+            border-bottom: 2px solid var(--color-primary);
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .sales-table, .claims-table, .delivery-table, .menu-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .sales-table th, .sales-table td, 
+        .claims-table th, .claims-table td,
+        .delivery-table th, .delivery-table td,
+        .menu-table th, .menu-table td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        .sales-table th, .claims-table th, .delivery-table th, .menu-table th {
+            background-color: #e9ecef;
+        }
+        .status-pendiente { background-color: #f8d7da; } 
+        .status-resuelto { background-color: #d4edda; }
+        #hours-section .form-group {
+            max-width: 300px;
+            margin-bottom: 20px;
+        }
+        #hours-section label {
+            font-size: 1.1em;
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div style="display: flex; align-items: center; float: left; margin-left: 20px;">
+            <img src="imagenes/logo.jpg" alt="Logo China House" style="height: 50px; margin-right: 15px;">
+            <h1 style="display: inline-block; margin: 0;">Panel de Administración</h1>
+        </div>
+        
+        <div id="admin-info" style="float: right; margin-right: 10px; color: white; display: flex; align-items: center; height: 100%;">
+            <span id="welcome-admin" style="margin-right: 15px; font-size: 1.1em;"></span>
+            <button id="logout-button" class="button button-info" style="background-color: #b30000; padding: 8px 15px;">
+                Cerrar Sesión
+            </button>
+        </div>
+    </header>
+    
+    <main class="admin-grid">
+        <nav class="sidebar">
+            <button id="btn-sales" class="active">📊 Pedidos y Ventas</button>
+            <button id="btn-claims">🚨 Gestión de Reclamos</button>
+            <button id="btn-delivery" style="background-color: #17a2b8;">🏍️ Pedidos Delivery</button>
+            <button id="btn-hours" style="background-color: #ffc107; color: #333;">⏰ Horarios</button>
+            
+            <button id="btn-menu-management" style="background-color: #6c757d;">⚙️ Gestión de Menú</button>
+            
+            <button id="btn-menu-cliente" onclick="window.location.href='menu.html'">← Menú Cliente</button>
+        </nav>
+
+        <div class="content">
+            
+            <section id="sales-section" class="content-section">
+                <h2>📊 Pedidos Recientes (Administrador)</h2>
+                <div style="margin-bottom: 15px;">
+                    <button class="button button-info" onclick="exportSales()">Exportar a CSV</button>
+                </div>
+                <table class="sales-table">
+                    <thead>
+                        <tr>
+                            <th>ID Venta</th>
+                            <th>Fecha/Hora</th>
+                            <th>Cliente</th>
+                            <th>Tipo Entrega</th>
+                            <th>Pago</th>
+                            <th>Total</th>
+                            <th>Detalles</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sales-body">
+                        <tr><td colspan="7" style="text-align: center;">Cargando pedidos...</td></tr>
+                    </tbody>
+                </table>
+            </section>
+            
+            <section id="claims-section" class="content-section" style="display: none;">
+                <h2>🚨 Gestión de Reclamos y Consultas</h2>
+                <p>Aquí se listan todos los reclamos y consultas registrados en el **Libro de Reclamaciones**.</p>
+                <table class="claims-table">
+                    <thead>
+                        <tr>
+                            <th>ID Rec.</th>
+                            <th>Fecha</th>
+                            <th>Tipo</th>
+                            <th>Cliente</th>
+                            <th>ID Venta</th>
+                            <th>Detalle</th>
+                            <th>Estado</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="claims-body">
+                        <tr><td colspan="8" style="text-align: center; color: gray;">
+                            Cargando reclamos...
+                        </td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <section id="delivery-section" class="content-section" style="display: none;">
+                <h2 style="border-bottom-color: #17a2b8; color: #17a2b8;">🏍️ Órdenes Pendientes de Delivery</h2>
+                <p>Esta es la lista de pedidos con servicio a domicilio. Usa esta información para la entrega.</p>
+                <table class="delivery-table">
+                    <thead>
+                        <tr>
+                            <th>ID Venta</th>
+                            <th>Cliente</th>
+                            <th>Teléfono</th>
+                            <th>Dirección</th>
+                            <th>Hora Pedido</th>
+                            <th>Total</th>
+                            <th>Estado Entrega</th>
+                            <th>Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="delivery-body">
+                        <tr><td colspan="8" style="text-align: center; color: gray;">
+                            Cargando órdenes de delivery...
+                        </td></tr>
+                    </tbody>
+                </table>
+            </section>
+            
+            <section id="hours-section" class="content-section" style="display: none;">
+                <h2 style="border-bottom-color: #ffc107; color: #ffc107;">⏰ Configuración de Horarios de Apertura y Cierre</h2>
+                <p>Define la hora local de **apertura** y **cierre** para permitir o denegar la toma de pedidos en el sistema.</p>
+                <form id="hours-form">
+                    <div class="form-group">
+                        <label for="opening-time">Hora de Apertura (24h):</label>
+                        <input type="time" id="opening-time" value="10:00" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="closing-time">Hora de Cierre (24h):</label>
+                        <input type="time" id="closing-time" value="23:00" required>
+                    </div>
+                    <button type="submit" class="button button-success">💾 Guardar Horarios de Operación</button>
+                </form>
+                <p id="hours-status" style="margin-top: 15px; font-weight: bold; padding: 10px; border-radius: 5px; background-color: #fff3cd; color: #856404;"></p>
+            </section>
+            
+            <section id="menu-management-section" class="content-section" style="display: none;">
+                <h2 style="border-bottom-color: #6c757d; color: #6c757d;">⚙️ Gestión de Inventario y Menú</h2>
+                <p>Usa los interruptores para **inhabilitar** o **habilitar** platos. Los platos inhabilitados no se podrán pedir en el menú cliente (por agotamiento, falta de insumos, etc.).</p>
+                
+                <table class="menu-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Plato</th>
+                            <th>Precio</th>
+                            <th>Estado</th>
+                            <th>Acción (Inhabilitar/Habilitar)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="menu-management-body">
+                        <tr><td colspan="5" style="text-align: center;">Cargando menu...</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+        </div>
+    </main>
+    
+    <footer>
+        <p>&copy; 2025 China House. Panel de Administración.</p>
+    </footer>
+
+    <script>
+        const isAdminLoggedIn = sessionStorage.getItem('isAdminLoggedIn') === 'true';
+        const userName = sessionStorage.getItem('userName') || 'Administrador';
+        const isDeliveryUser = userName.toLowerCase().includes('delivery') || userName.toLowerCase().includes('repartidor');
+        
+        // Cuerpos de tabla
+        const salesBody = document.getElementById('sales-body');
+        const claimsBody = document.getElementById('claims-body');
+        const deliveryBody = document.getElementById('delivery-body');
+        const menuManagementBody = document.getElementById('menu-management-body');
+        
+        // DEFINICIÓN CENTRALIZADA DE PLATOS (DEBE COINCIDIR CON menu.html)
+        const menuData = [
+            { id: 1, name: "Arroz Chaufa Especial", price: 18.50 },
+            { id: 2, name: "Tallarín Saltado", price: 16.00 },
+            { id: 3, name: "Aeropuerto", price: 20.00 },
+            { id: 4, name: "Wantan Frito (5 unid.)", price: 8.00 },
+            { id: 5, name: "Sopa Wantan (Personal)", price: 12.00 },
+            { id: 6, name: "Pollo con Champiñones", price: 22.00 },
+            { id: 7, name: "Kam Lu Wantan", price: 25.00 },
+            { id: 8, name: "Sopa de Pollo y Verduras", price: 10.00 }
+        ];
+
+        function logout() {
+            sessionStorage.clear();
+            localStorage.removeItem('usuarioActivo');
+            window.location.href = 'login.html';
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!isAdminLoggedIn && !isDeliveryUser) {
+                alert('Acceso denegado. Por favor, inicia sesión.');
+                window.location.href = 'login.html'; 
+                return; 
+            }
+            
+            document.getElementById('welcome-admin').textContent = `Hola, ${userName}`;
+            document.getElementById('logout-button').addEventListener('click', logout);
+            
+            if (isDeliveryUser && !isAdminLoggedIn) {
+                document.getElementById('btn-sales').style.display = 'none';
+                document.getElementById('btn-claims').style.display = 'none';
+                document.getElementById('btn-hours').style.display = 'none';
+                document.getElementById('btn-menu-management').style.display = 'none'; // ❌ Ocultar a Repartidor
+                
+                // Muestra la sección de delivery por defecto
+                document.getElementById('sales-section').style.display = 'none';
+                document.getElementById('claims-section').style.display = 'none';
+                document.getElementById('hours-section').style.display = 'none';
+                document.getElementById('menu-management-section').style.display = 'none';
+                document.getElementById('delivery-section').style.display = 'block';
+                
+                document.getElementById('btn-delivery').classList.add('active');
+                loadDeliveryTable();
+            } else {
+                loadSalesTable();
+                setupNavigation();
+            }
+        });
+
+        function setupNavigation() {
+            const sections = {
+                sales: document.getElementById('sales-section'),
+                claims: document.getElementById('claims-section'),
+                delivery: document.getElementById('delivery-section'),
+                hours: document.getElementById('hours-section'),
+                menu: document.getElementById('menu-management-section') 
+            };
+            const buttons = {
+                sales: document.getElementById('btn-sales'),
+                claims: document.getElementById('btn-claims'),
+                delivery: document.getElementById('btn-delivery'),
+                hours: document.getElementById('btn-hours'),
+                menu: document.getElementById('btn-menu-management') 
+            };
+            
+            buttons.sales.onclick = () => {
+                showSection(sections.sales, buttons.sales);
+                loadSalesTable();
+            };
+            
+            buttons.claims.onclick = () => {
+                showSection(sections.claims, buttons.claims);
+                loadClaimsTable();
+            };
+
+            buttons.delivery.onclick = () => {
+                showSection(sections.delivery, buttons.delivery);
+                loadDeliveryTable();
+            };
+            
+            buttons.hours.onclick = () => {
+                showSection(sections.hours, buttons.hours);
+                loadHours();
+            };
+            
+            buttons.menu.onclick = () => {
+                showSection(sections.menu, buttons.menu);
+                loadMenuManagementTable(); 
+            };
+
+
+            function showSection(sectionToShow, buttonToActivate) {
+                // Ocultar todas las secciones
+                Object.values(sections).forEach(section => section.style.display = 'none');
+
+                // Desactivar todos los botones
+                Object.values(buttons).forEach(button => button.classList.remove('active'));
+
+                // Mostrar la sección y activar el botón
+                sectionToShow.style.display = 'block';
+                buttonToActivate.classList.add('active');
+            }
+        }
+        
+        window.loadHours = function() {
+            const hours = JSON.parse(localStorage.getItem('chinaHouseHours')) || {
+                opening: '10:00',
+                closing: '23:00'
+            };
+            document.getElementById('opening-time').value = hours.opening;
+            document.getElementById('closing-time').value = hours.closing;
+            
+            document.getElementById('hours-status').textContent = 
+                `El sistema está configurado para abrir a las ${hours.opening}h y cerrar a las ${hours.closing}h (Hora local).`;
+        }
+
+        document.getElementById('hours-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const openingTime = document.getElementById('opening-time').value;
+            const closingTime = document.getElementById('closing-time').value;
+            
+            if (openingTime === closingTime) {
+                alert('La hora de apertura y cierre no pueden ser la misma.');
+                return;
+            }
+
+            const hoursData = {
+                opening: openingTime,
+                closing: closingTime
+            };
+            
+            localStorage.setItem('chinaHouseHours', JSON.stringify(hoursData));
+            document.getElementById('hours-status').textContent = 
+                `✅ Horarios actualizados: Apertura ${openingTime}h, Cierre ${closingTime}h.`;
+        });
+
+        window.loadMenuManagementTable = function() {
+            const disabledPlates = JSON.parse(localStorage.getItem('disabledPlates')) || {}; 
+            menuManagementBody.innerHTML = '';
+
+            if (menuData.length === 0) {
+                menuManagementBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No hay platos definidos.</td></tr>';
+                return;
+            }
+
+            menuData.forEach(plate => {
+                const is_disabled = !!disabledPlates[plate.id];
+                const row = menuManagementBody.insertRow();
+                
+                row.innerHTML = `
+                    <td>${plate.id}</td>
+                    <td>${plate.name}</td>
+                    <td>s/${plate.price.toFixed(2)}</td>
+                    <td>
+                        <span style="font-weight: bold; color: ${is_disabled ? 'red' : 'green'};">
+                            ${is_disabled ? 'INHABILITADO (AGOTADO)' : 'HABILITADO'}
+                        </span>
+                    </td>
+                    <td>
+                        <label class="switch" style="display: flex; align-items: center;">
+                            <input 
+                                type="checkbox" 
+                                id="toggle-${plate.id}" 
+                                ${is_disabled ? '' : 'checked'}
+                                onchange="togglePlateStatus(${plate.id})"
+                            >
+                            <span class="slider round" style="
+                                display: inline-block; 
+                                width: 40px; 
+                                height: 20px; 
+                                margin-left: 10px; 
+                                background-color: ${is_disabled ? '#ccc' : '#28a745'};
+                                border-radius: 10px;
+                                position: relative;
+                            ">
+                                <span style="
+                                    position: absolute; 
+                                    content: ''; 
+                                    height: 14px; 
+                                    width: 14px; 
+                                    left: ${is_disabled ? '3px' : '23px'};
+                                    bottom: 3px; 
+                                    background-color: white; 
+                                    transition: .4s;
+                                    border-radius: 50%;
+                                "></span>
+                            </span>
+                        </label>
+                    </td>
+                `;
+            });
+        }
+        
+        window.togglePlateStatus = function(plateId) {
+            let disabledPlates = JSON.parse(localStorage.getItem('disabledPlates')) || {};
+            const checkbox = document.getElementById(`toggle-${plateId}`);
+            
+            if (!checkbox.checked) {
+                // Se inhabilito el plato
+                disabledPlates[plateId] = true;
+                alert(`Plato ID ${plateId} inhabilitado. Se mostrará como AGOTADO en el menú cliente.`);
+            } else {
+                // Se habilito el plato
+                delete disabledPlates[plateId];
+                alert(`Plato ID ${plateId} habilitado. Estará disponible en el menú cliente.`);
+            }
+            
+            localStorage.setItem('disabledPlates', JSON.stringify(disabledPlates));
+            loadMenuManagementTable(); // Recarga la tabla para reflejar el cambio
+        }
+
+        // LOGICA DE CARGA DE VENTAS (ADMIN - SIN FILTRO) - Se mantiene igual
+        window.loadSalesTable = function() {
+            // ... (Lógica de loadSalesTable) ...
+            const sales = JSON.parse(localStorage.getItem('chinaHouseSales')) || [];
+            salesBody.innerHTML = ''; 
+
+            if (sales.length === 0) {
+                salesBody.innerHTML = '<tr><td colspan="7" style="text-align: center;">No hay pedidos registrados aún.</td></tr>';
+                return;
+            }
+
+            sales.sort((a, b) => b.id - a.id); 
+
+            sales.forEach(sale => {
+                const row = salesBody.insertRow();
+                const totalFormatted = `s/${(sale.totalFinal || sale.total).toFixed(2)}`;
+                row.innerHTML = `
+                    <td>#${sale.id.toString().slice(-4)}</td>
+                    <td>${sale.date} / ${sale.time}</td>
+                    <td>${sale.customerName}</td>
+                    <td>${sale.deliveryType}</td>
+                    <td>${sale.paymentMethod}</td>
+                    <td>${totalFormatted}</td>
+                    <td>
+                        <button class="button button-primary" onclick="viewSaleDetails(${sale.id})">Ver</button>
+                    </td>
+                `;
+            });
+        }
+        
+        // LOGICA DE CARGA DE DELIVERY (REPARTIDOR - FILTRADO) - Se mantiene igual
+        window.loadDeliveryTable = function() {
+            const sales = JSON.parse(localStorage.getItem('chinaHouseSales')) || [];
+            const deliveryOrders = sales.filter(sale => sale.deliveryType === 'Delivery');
+            
+            deliveryBody.innerHTML = '';
+
+            if (deliveryOrders.length === 0) {
+                deliveryBody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No hay órdenes pendientes de delivery.</td></tr>';
+                return;
+            }
+
+            deliveryOrders.sort((a, b) => b.id - a.id); 
+
+            deliveryOrders.forEach(order => {
+                const row = deliveryBody.insertRow();
+                const totalFormatted = `s/${(order.totalFinal || order.total).toFixed(2)}`;
+                const status = order.deliveryStatus || 'En Preparación'; 
+                
+                row.innerHTML = `
+                    <td>#${order.id.toString().slice(-4)}</td>
+                    <td>${order.customerName}</td>
+                    <td>${order.phoneNumber}</td>
+                    <td>${order.deliveryAddress}</td>
+                    <td>${order.time}</td>
+                    <td>${totalFormatted}</td>
+                    <td>${status}</td>
+                    <td>
+                        <button class="button button-success" onclick="markDeliveryAsComplete(${order.id})" ${status === 'Entregado' ? 'disabled' : ''}>
+                            ${status === 'Entregado' ? 'Entregado' : 'Finalizar'}
+                        </button>
+                    </td>
+                `;
+            });
+        }
+        
+        // MARCAMOS ENTREGA COMO COMPLETA 
+        window.markDeliveryAsComplete = function(saleId) {
+            let sales = JSON.parse(localStorage.getItem('chinaHouseSales')) || [];
+            const saleIndex = sales.findIndex(s => s.id === saleId);
+
+            if (saleIndex > -1) {
+                if (confirm(`¿Confirmas que la orden #${saleId.toString().slice(-4)} ha sido entregada al cliente?`)) {
+                    sales[saleIndex].deliveryStatus = 'Entregado';
+                    sales[saleIndex].deliveredBy = userName; 
+                    
+                    localStorage.setItem('chinaHouseSales', JSON.stringify(sales));
+                    
+                    alert(`Orden #${saleId.toString().slice(-4)} marcada como Entregada.`);
+                    loadDeliveryTable();
+                }
+            } else {
+                alert('Venta no encontrada.');
+            }
+        }
+        
+        // LOGICA DE GESTION DE RECLAMOS 
+        window.loadClaimsTable = function() {
+            const claims = JSON.parse(localStorage.getItem('chinaHouseClaims')) || [];
+            claimsBody.innerHTML = ''; 
+
+            if (claims.length === 0) {
+                claimsBody.innerHTML = '<tr><td colspan="8" style="text-align: center;">No hay reclamos o consultas registrados.</td></tr>';
+                return;
+            }
+
+            claims.sort((a, b) => b.id - a.id); 
+
+            claims.forEach(claim => {
+                const isResolved = claim.status === 'Resuelto';
+                const row = claimsBody.insertRow();
+                row.className = isResolved ? 'status-resuelto' : 'status-pendiente'; 
+
+                row.innerHTML = `
+                    <td>#${claim.id.toString().slice(-4)}</td>
+                    <td>${claim.date}</td>
+                    <td><span style="font-weight: bold; color: ${claim.type === 'Reclamo' ? '#D32F2F' : '#1976D2'};">${claim.type}</span></td>
+                    <td>${claim.name}</td>
+                    <td>${claim.orderId}</td>
+                    <td>${claim.details.substring(0, 45)}...</td>
+                    <td>${claim.status}</td>
+                    <td>
+                        <button 
+                            class="button ${isResolved ? 'button-info' : 'button-success'}" 
+                            onclick="markClaimAsResolved(${claim.id})"
+                            ${isResolved ? 'disabled' : ''}
+                        >
+                            ${isResolved ? 'Resuelto' : 'Marcar Resuelto'}
+                        </button>
+                    </td>
+                `;
+            });
+        }
+        
+        window.markClaimAsResolved = function(claimId) {
+            let claims = JSON.parse(localStorage.getItem('chinaHouseClaims')) || [];
+            const claimIndex = claims.findIndex(c => c.id === claimId);
+
+            if (claimIndex > -1) {
+                claims[claimIndex].status = 'Resuelto';
+                claims[claimIndex].resolvedBy = userName; 
+                
+                localStorage.setItem('chinaHouseClaims', JSON.stringify(claims));
+                
+                loadClaimsTable(); 
+                
+                alert(`Reclamo #${claimId.toString().slice(-4)} marcado como Resuelto por ${userName}.`);
+            }
+        }
+        
+        // DETALLES DE VENTA y EXPORTAR A CSV 
+        window.viewSaleDetails = function(saleId) {  }
+        window.exportSales = function() {  }
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Libro de Reclamaciones - China House</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .reclamaciones-container {
+            width: 90%;
+            max-width: 650px; 
+            margin: 50px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); 
+        }
+        .reclamaciones-container h2 {
+            color: #b30000;
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #b30000;
+            padding-bottom: 10px;
+        }
+        .reclamaciones-container h3 {
+            color: var(--color-dark);
+            margin-top: 25px;
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px; 
+        }
+        .success-message {
+            text-align: center;
+            color: #4CAF50;
+            font-size: 1.1em;
+            font-weight: bold;
+            padding: 15px;
+            border: 1px solid #4CAF50;
+            background-color: #e8f5e9;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div style="display: flex; align-items: center; justify-content: center;">
+            <img src="imagenes/logo.jpg" alt="Logo China House" style="height: 50px; margin-right: 15px;">
+            <h1>LIBRO DE RECLAMACIONES</h1>
+        </div>
+    </header>
+    <main class="main-container">
+        <div class="reclamaciones-container">
+            <h2>🚨 Ingresar Nuevo Reclamo/Queja</h2>
+
+            <form id="claim-form">
+                
+                <h3>Datos Personales</h3>
+                
+                <div class="form-group">
+                    <label for="claim-name">Nombre Completo:</label>
+                    <input type="text" id="claim-name" required>
+                </div>
+                
+                <div style="display: flex; gap: 20px;">
+                    <div class="form-group" style="flex: 1;">
+                        <label for="claim-dni">DNI/CE:</label>
+                        <input type="text" id="claim-dni" maxlength="8" required>
+                    </div>
+                    <div class="form-group" style="flex: 1;">
+                        <label for="claim-phone">Teléfono:</label>
+                        <input type="tel" id="claim-phone" maxlength="9" required>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="claim-email">Email:</label>
+                    <input type="email" id="claim-email" required>
+                </div>
+
+                <h3>Detalle del Reclamo</h3>
+                
+                <div class="form-group">
+                    <label for="claim-type">Tipo de Solicitud:</label>
+                    <select id="claim-type" required>
+                        <option value="Reclamo">Reclamo (Disconformidad con el servicio o producto)</option>
+                        <option value="Queja">Queja (Malestar con la atención, trato o demora)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="claim-order-id">ID del Pedido (si aplica):</label>
+                    <input type="text" id="claim-order-id" placeholder="Se autocompleta con el último ID de venta, o ingresa el tuyo.">
+                </div>
+                
+                <div class="form-group">
+                    <label for="claim-description">Descripcion Detallada (Max 1000 caracteres):</label>
+                    <textarea id="claim-description" maxlength="1000" required></textarea>
+                </div>
+                
+                <button type="submit" class="button button-danger" style="width: 100%; margin-top: 20px; padding: 15px;">
+                    ENVIAR RECLAMO
+                </button>
+
+                <div id="success-message" class="success-message" style="display: none;">
+                    ✅ ¡Reclamo registrado con éxito! Tu ID de Reclamo es: <span id="display-claim-id"></span>. Te responderemos pronto.
+                </div>
+
+            </form>
+            
+            <a href="menu.html" class="button button-primary" style="width: 100%; margin-top: 15px; background-color: #6c757d;">
+                ← Volver al Menu Principal
+            </a>
+        </div>
+    </main>
+    <footer>
+        <p>&copy; 2025 China House. Todos los derechos reservados. <a href="reclamos.html">Libro de Reclamaciones</a></p>
+    </footer>
+
+    <script>
+        // Funcion para autocompletar el ID de la ultima venta
+        function preFillOrderId() {
+            const claimOrderIdInput = document.getElementById('claim-order-id');
+            const salesData = JSON.parse(localStorage.getItem('chinaHouseSales')) || [];
+            
+            if (salesData.length > 0) {
+                // Obtenemos el ID completo de la ultima venta (la más reciente)
+                const lastSaleId = salesData[salesData.length - 1].id;
+                
+                // Solo pre-llenamos si el campo esta vacio, pero usamos el ID completo para la precision del reclamo
+                if (claimOrderIdInput.value.trim() === '') {
+                    claimOrderIdInput.value = lastSaleId; 
+                }
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            const form = document.getElementById('claim-form');
+            const successMessage = document.getElementById('success-message');
+            const displayClaimId = document.getElementById('display-claim-id');
+            const claimNameInput = document.getElementById('claim-name');
+            
+            // Pre-llenar Nombre desde la sesion (si existe)
+            const savedUserName = sessionStorage.getItem('userName');
+            if (savedUserName) {
+                claimNameInput.value = savedUserName;
+            }
+
+            // Pre-llenar ID de la Venta al cargar la página
+            preFillOrderId();
+
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+
+                //Construir objeto de reclamo
+                const newClaim = {
+                    id: Date.now(), // Usamos el timestamp como ID unico
+                    date: new Date().toLocaleDateString('es-PE'),
+                    time: new Date().toLocaleTimeString('es-PE'),
+                    name: document.getElementById('claim-name').value.trim(),
+                    dni: document.getElementById('claim-dni').value.trim(),
+                    phone: document.getElementById('claim-phone').value.trim(),
+                    email: document.getElementById('claim-email').value.trim(),
+                    type: document.getElementById('claim-type').value,
+                    orderId: document.getElementById('claim-order-id').value.trim() || 'N/A', 
+                    details: document.getElementById('claim-description').value.trim(),
+                    status: 'Pendiente', 
+                };
+
+                //Guardar en localStorage
+                let claims = JSON.parse(localStorage.getItem('chinaHouseClaims')) || [];
+                claims.push(newClaim);
+                localStorage.setItem('chinaHouseClaims', JSON.stringify(claims));
+                
+                // Mostrar ID corto y mensaje de exito
+                const shortClaimId = `#${newClaim.id.toString().slice(-4)}`;
+                displayClaimId.textContent = shortClaimId;
+                
+                form.reset();
+                successMessage.style.display = 'block';
+                
+                // Ocultar mensaje despues de 5 segundos
+                setTimeout(() => {
+                    successMessage.style.display = 'none';
+                    // Re-intentar autocompletar el ID por si la ultima venta cambio
+                    preFillOrderId(); 
+                }, 5000);
+            });
+        });
+    </script>
+</body>
+</html>

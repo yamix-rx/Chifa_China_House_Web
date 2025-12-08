@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Iniciar Sesión - Sistema de Gestión de China House</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div style="display: flex; align-items: center; justify-content: center;">
+            <img src="imagenes/logo.jpg" alt="Logo China House" style="height: 50px; margin-right: 15px;">
+            <h1>CHINA HOUSE</h1>
+        </div>
+    </header>
+
+    <main class="main-container">
+        <div class="box login-grid">
+
+            <section class="login-form">
+                <h2>INICIAR SESIÓN</h2>
+                <form id="formLogin">
+                    <div class="form-group">
+                        <input type="text" id="usuarioLogin" placeholder="Usuario" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" id="claveLogin" placeholder="Contraseña" required>
+                    </div>
+                    <button type="submit" class="button button-primary">Iniciar Sesión</button>
+                    <p class="mensaje" id="mensajeLogin"></p>
+                </form>
+            </section>
+
+            <section class="register-form">
+                <h2>REGISTRARSE</h2>
+                <form id="formRegistro">
+                    <div class="form-group">
+                        <input type="text" id="nombreCompleto" placeholder="Nombre Completo" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="email" id="correo" placeholder="Correo Electrónico" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="usuarioRegistro" placeholder="Usuario" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" id="claveRegistro" placeholder="Contraseña" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" id="confirmarClave" placeholder="Confirmar Contraseña" required>
+                    </div>
+                    <button type="submit" class="button button-success">Registrarse</button>
+                    <p class="mensaje" id="mensajeRegistro"></p>
+                </form>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <p>&copy; 2025 China House. Todos los derechos reservados.</p>
+    </footer>
+
+    <script>
+    // REGISTRO DE USUARIO: Usamos localStorage para guardar usuarios 
+    const formRegistro = document.getElementById('formRegistro');
+    const mensajeRegistro = document.getElementById('mensajeRegistro');
+
+    formRegistro.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const nombre = document.getElementById('nombreCompleto').value.trim();
+        const correo = document.getElementById('correo').value.trim();
+        const usuario = document.getElementById('usuarioRegistro').value.trim();
+        const clave = document.getElementById('claveRegistro').value.trim();
+        const confirmar = document.getElementById('confirmarClave').value.trim();
+
+        if (clave !== confirmar) {
+            mensajeRegistro.textContent = "❌ Las contraseñas no coinciden.";
+            mensajeRegistro.style.color = "red";
+            return;
+        }
+        
+        // Verificamos si el usuario ya existe en localStorage
+        if (localStorage.getItem("user_" + usuario)) {
+            mensajeRegistro.textContent = "⚠ El usuario ya existe.";
+            mensajeRegistro.style.color = "orange";
+            return;
+        }
+        
+        // Evitamos que el cliente se registre con nombres de usuario reservados
+        const reservedUsers = ['admin', 'delivery1', 'repartidor'];
+        if (reservedUsers.includes(usuario.toLowerCase())) {
+             mensajeRegistro.textContent = "❌ Este nombre de usuario está reservado.";
+             mensajeRegistro.style.color = "red";
+             return;
+        }
+
+        const userData = {
+            nombre: nombre,
+            correo: correo,
+            usuario: usuario,
+            clave: clave,
+            rol: 'cliente' 
+        };
+
+        localStorage.setItem("user_" + usuario, JSON.stringify(userData));
+
+        mensajeRegistro.textContent = "✅ Registro exitoso. ¡Ahora puedes iniciar sesión!";
+        mensajeRegistro.style.color = "green";
+        formRegistro.reset();
+    });
+
+    // INICIO DE SESIÓN
+    const formLogin = document.getElementById('formLogin');
+    const mensajeLogin = document.getElementById('mensajeLogin');
+    
+    // CREDENCIALES PREDETERMINADAS DEL ADMINISTRADOR Y REPARTIDOR 
+    const validUsers = [
+        { username: 'admin', password: '123', role: 'admin', name: 'Administrador Principal' },
+        { username: 'delivery1', password: '456', role: 'delivery', name: 'Juan Repartidor' }
+    ];
+
+    formLogin.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const usuario = document.getElementById('usuarioLogin').value.trim();
+        const clave = document.getElementById('claveLogin').value.trim();
+        
+        // INTENTO DE INICIO DE SESIÓN COMO ADMINISTRADOR O REPARTIDOR 
+        const specialUser = validUsers.find(u => u.username === usuario && u.password === clave);
+
+        if (specialUser) {
+            mensajeLogin.textContent = `✅ Acceso de ${specialUser.role === 'admin' ? 'Administrador' : 'Delivery'} concedido.`;
+            mensajeLogin.style.color = "green";
+
+            // Guardar estado de sesion
+            sessionStorage.setItem('isLoggedIn', 'true');
+            sessionStorage.setItem('isAdminLoggedIn', specialUser.role === 'admin' ? 'true' : 'false'); 
+            sessionStorage.setItem('userName', specialUser.name); 
+            
+            setTimeout(() => {
+                // Admin y Repartidor van al mismo Dashboard para que el script filtre la vista
+                window.location.href = "admin_dashboard.html"; 
+            }, 1000);
+            return; 
+        }
+
+        // INTENTO DE INICIO DE SESIÓN COMO CLIENTE REGISTRADO 
+        const storedUser = localStorage.getItem("user_" + usuario);
+
+        if (!storedUser) {
+            mensajeLogin.textContent = "❌ Usuario no encontrado o credenciales inválidas.";
+            mensajeLogin.style.color = "red";
+            return;
+        }
+
+        const userData = JSON.parse(storedUser);
+        if (userData.clave === clave) {
+            mensajeLogin.textContent = "✅ Bienvenido, " + userData.nombre + "!";
+            mensajeLogin.style.color = "green";
+
+            // Guardamos sesion de Cliente
+            sessionStorage.setItem('isLoggedIn', 'true');
+            sessionStorage.setItem('isAdminLoggedIn', 'false'); 
+            sessionStorage.setItem('userName', userData.nombre); 
+            localStorage.setItem("usuarioActivo", usuario); 
+
+            // Redirigimos al menu principal
+            setTimeout(() => {
+                window.location.href = "menu.html";
+            }, 1500);
+        } else {
+            mensajeLogin.textContent = "❌ Contraseña incorrecta.";
+            mensajeLogin.style.color = "red";
+        }
+    });
+</script>
+</body>
+</html>

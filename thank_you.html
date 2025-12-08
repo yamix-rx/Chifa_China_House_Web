@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Gracias por tu Compra! - China House</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .thank-you-container {
+            width: 90%;
+            max-width: 700px;
+            margin: 50px auto; 
+            padding: 40px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            text-align: center;
+        }
+        .thank-you-container h2 {
+            color: #4CAF50; 
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .thank-you-container p {
+            font-size: 1.1em;
+            color: #555;
+            margin-bottom: 25px;
+        }
+        .order-summary {
+            background-color: #f7f7f7;
+            border: 1px solid #eee;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px; 
+        }
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            font-size: 1.2em;
+            padding: 8px 0;
+            border-bottom: 1px dashed #ddd;
+        }
+        .summary-item:last-of-type { 
+            border-bottom: none;
+        }
+        .total-item {
+            font-weight: bold;
+            color: var(--color-primary);
+            font-size: 1.4em;
+            border-top: 2px solid #ddd;
+            padding-top: 15px;
+            margin-top: 10px;
+        }
+        .important-id {
+            color: #D32F2F; /* Rojo para destacar el ID */
+            font-size: 1.8em;
+            font-weight: bold;
+            display: block;
+        }
+        .button-group a {
+            margin: 0 10px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div style="display: flex; align-items: center; justify-content: center;">
+            <img src="imagenes/logo.jpg" alt="Logo China House" style="height: 50px; margin-right: 15px;">
+            <h1>CHINA HOUSE</h1>
+        </div>
+    </header>
+    
+    <main class="main-container">
+        <div class="thank-you-container">
+            <h2>🎉 ¡Pedido Confirmado!</h2>
+            
+            <p>Gracias por tu compra, <span id="customer-name-display" style="font-weight: bold;">Cliente</span>. Tu pedido ha sido registrado y está siendo procesado.</p>
+
+            <div class="order-summary">
+                <h3>Resumen de tu Pago</h3>
+                
+                <div class="summary-item">
+                    <span>ID de Venta:</span>
+                    <span class="important-id" id="sale-id-display">#0000</span>
+                </div>
+                
+                <div class="summary-item total-item">
+                    <span>TOTAL FINAL PAGADO:</span>
+                    <span id="sale-total-display">s/0.00</span>
+                </div>
+                
+                <p style="margin-top: 25px; font-size: 0.9em; color: #888;">Guarda el ID de Venta si necesitas hacer una consulta o reclamo. Lo necesitarás en nuestro <a href="reclamos.html" style="color: #D32F2F;">Libro de Reclamaciones</a>.</p>
+            </div>
+
+            <div class="button-group" style="margin-top: 40px;">
+                <a href="menu.html" class="button button-primary" style="padding: 12px 25px;">
+                    Volver al Menú
+                </a>
+                <a href="reclamos.html" class="button button-danger" style="padding: 12px 25px;">
+                    Ir a Reclamos
+                </a>
+            </div>
+        </div>
+    </main>
+    <footer>
+        <p>&copy; 2025 China House. Todos los derechos reservados. <a href="reclamos.html">Libro de Reclamaciones</a></p>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', loadLastSaleSummary);
+
+        function loadLastSaleSummary() {
+            const salesData = JSON.parse(localStorage.getItem('chinaHouseSales')) || [];
+            
+            if (salesData.length === 0) {
+                document.querySelector('.thank-you-container h2').textContent = '⚠️ Error al Cargar Pedido';
+                document.querySelector('.thank-you-container p').textContent = 'No se encontró el resumen de la última venta en el historial.';
+                return;
+            }
+            
+            const lastSale = salesData[salesData.length - 1]; 
+            
+            const customerNameDisplay = document.getElementById('customer-name-display');
+            const saleIdDisplay = document.getElementById('sale-id-display');
+            const saleTotalDisplay = document.getElementById('sale-total-display');
+
+            customerNameDisplay.textContent = lastSale.customerName || sessionStorage.getItem('userName') || 'Cliente';
+            
+            saleIdDisplay.textContent = `#${lastSale.id.toString().slice(-4)}`; 
+            
+            const finalAmount = lastSale.totalFinal || lastSale.total; 
+            saleTotalDisplay.textContent = `s/${parseFloat(finalAmount).toFixed(2)}`;
+            
+            sessionStorage.removeItem('chinaHouseFinalTotal');
+        }
+    </script>
+</body>
+</html>
